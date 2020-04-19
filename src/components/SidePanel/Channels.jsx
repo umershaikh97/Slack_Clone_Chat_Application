@@ -1,19 +1,76 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import firebase from '../../firebase';
+import { connect } from 'react-redux';
 import { Menu, Icon, Modal, Form, Input, Button } from 'semantic-ui-react';
-import { checkKeyInObject } from '../../utils';
+import { checkKeyInObject, checkArrayLength } from '../../utils';
+import { setCurrentChannel } from '../../store/actions/channelActions';
 
-const Channels = ({ currentUser }) => {
+const Channels = ({ currentUser, setCurrentChannel }) => {
     const [channels, setChannels] = useState([]);
     const [isModalOpen, toggleModal] = useState(false);
     const [channelDetails, setChannelDetails] = useState("");
     const [channelName, setChannelName] = useState("");
+    const [isFirstLoad, setFirstLoad] = useState(true);
+    const [activeChannel, setActiveChannel] = useState('')
+
+    useEffect(() => {
+        addListenerForCreateChannel();
+    }, [])
+
+    useEffect(() => {
+        setFirstChannel();
+    }, [channels])
+
+    const addListenerForCreateChannel = async () => {
+        let loadedChannels = [];
+        const channelRef = await firebase.database().ref('channels');
+        try {
+            await channelRef.on('child_added', snap => {
+                loadedChannels.push(snap.val());
+                setChannels([...loadedChannels]);
+            })
+        } catch (error) {
+            console.log('Error while loading channel list', error)
+        }
+    }
+
+    const setFirstChannel = () => {
+        if (isFirstLoad && checkArrayLength(channels)) {
+            setCurrentChannel(channels[0]);
+            setActiveChannel(channels[0])
+            setFirstLoad(false);
+        }
+    }
+
+    const displayChannels = () =>
+        checkArrayLength(channels) &&
+        channels.map(channel => (
+            <Menu.Item
+                key={channel.id}
+                onClick={() => changeChannel(channel)}
+                name={channel.name}
+                style={{ opacity: 0.7 }}
+                active={channel.id === activeChannel.id}
+            >
+                # {channel.name}
+            </Menu.Item>
+        ));
 
     const handleSubmit = (e) => {
         e.preventDefault();
         if (channelName && channelDetails) {
             addChannel();
         }
+    }
+
+    const changeChannel = (channel) => {
+        updateActiveChannel(channel);
+        setCurrentChannel(channel);
+    }
+
+    const updateActiveChannel = (channel) => {
+        setActiveChannel(channel);
+        setCurrentChannel(channel);
     }
 
     const addChannel = async () => {
@@ -49,6 +106,7 @@ const Channels = ({ currentUser }) => {
             ({channels.length}) <Icon name="add" style={{ cursor: 'pointer' }} onClick={() => { toggleModal(true) }} />
                 </Menu.Item>
                 {/* Channels */}
+                {displayChannels()}
             </Menu.Menu>
 
             {/* Add Channel Modal */}
@@ -90,4 +148,16 @@ const Channels = ({ currentUser }) => {
 
 }
 
-export default Channels;
+const mapStateToProps = (state) => {
+    return {
+        currentUser: state.userReducer.currentUser,
+    }
+}
+
+const mapDispatchToProps = (dispatch) => {
+    return {
+        setCurrentChannel: (...args) => { dispatch(setCurrentChannel(...args)) },
+    }
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(Channels);
