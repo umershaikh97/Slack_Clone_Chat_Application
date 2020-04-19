@@ -10,6 +10,7 @@ import {
     Icon
 } from 'semantic-ui-react';
 import { Link } from 'react-router-dom';
+import md5 from 'md5';
 
 const Register = () => {
     const [username, setUsername] = useState('');
@@ -58,15 +59,24 @@ const Register = () => {
         if (isFormValid()) {
             setErrors([])
             setLoading(true);
-            console.log(username, email, password, passwordConfirmation);
             try {
                 let createdUser = await firebase.auth().createUserWithEmailAndPassword(email, password);
-                console.log(createdUser)
-                setLoading(true);
+
+                await createdUser.user.updateProfile({
+                    displayName: username,
+                    photoURL: `http://gravatar.com/avatar/${md5(createdUser.user.email)}?d=identicon`
+                });
+
+                await firebase.database().ref('users').child(createdUser.user.uid).set({
+                    name: createdUser.user.displayName,
+                    avatar: createdUser.user.photoURL,
+                });
+                console.log('user saved');
             } catch (error) {
+                console.log(error)
                 setErrors([...errors, error])
-                setLoading(false);
             }
+            setLoading(false);
         }
     }
 
@@ -79,7 +89,7 @@ const Register = () => {
         <div>
             <Grid textAlign="center" verticalAlign="middle" className="app">
                 <Grid.Column style={{ maxWidth: 450 }}>
-                    <Header as="h2" icon color="orange" textAlign="center">
+                    <Header as="h1" icon color="orange" textAlign="center">
                         <Icon name="puzzle piece" color="orange" />
                             Register for DevChat
                     </Header>
