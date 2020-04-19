@@ -1,4 +1,3 @@
-import { combineReducers } from 'redux';
 import * as actionTypes from '../actions/types';
 
 const initialState = {
@@ -18,8 +17,4 @@ const userReducer = (state = initialState, action) => {
     }
 }
 
-const rootReducer = combineReducers({
-    userReducer
-})
-
-export default rootReducer;
+export default userReducer;
