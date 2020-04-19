@@ -6,8 +6,9 @@ import Messages from "./components/Messages/Messages";
 import MetaPanel from "./components/MetaPanel/MetaPanel";
 import SidePanel from "./components/SidePanel/SidePanel";
 import { connect } from "react-redux";
+import { checkKeyInObject } from "./utils";
 
-const App = ({ currentUser }) => {
+const App = ({ currentUser, currentChannel }) => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
@@ -18,10 +19,10 @@ const App = ({ currentUser }) => {
 
   return (<Grid columns="equal" className="app" style={{ background: "#eee" }}>
     <ColorPanel />
-    <SidePanel currentUser={user} />
+    <SidePanel currentUser={user} key={checkKeyInObject(currentUser, 'uid', 'value', '')} />
 
     <Grid.Column style={{ marginLeft: 320 }}>
-      <Messages />
+      <Messages key={checkKeyInObject(currentChannel, 'id', 'value', '')} currentChannel={currentChannel} currentUser={currentUser} />
     </Grid.Column>
 
     <Grid.Column width={4}>
@@ -33,6 +34,7 @@ const App = ({ currentUser }) => {
 const mapStateToProps = (state) => {
   return {
     currentUser: state.userReducer.currentUser,
+    currentChannel: state.channelReducer.currentChannel,
   }
 }
 
