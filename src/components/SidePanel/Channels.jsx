@@ -15,16 +15,28 @@ const Channels = ({ currentUser, setCurrentChannel }) => {
 
     useEffect(() => {
         addListenerForCreateChannel();
+        return () => {
+            removeListenerForCreateChannel();
+        }
     }, [])
 
     useEffect(() => {
         setFirstChannel();
     }, [channels])
 
+    const removeListenerForCreateChannel = async () => {
+        try {
+            const channelRef = await firebase.database().ref('channels');
+            await channelRef.off();
+        } catch (error) {
+            console.log('Error while removing listener', error)
+        }
+    }
+
     const addListenerForCreateChannel = async () => {
         let loadedChannels = [];
-        const channelRef = await firebase.database().ref('channels');
         try {
+            const channelRef = await firebase.database().ref('channels');
             await channelRef.on('child_added', snap => {
                 loadedChannels.push(snap.val());
                 setChannels([...loadedChannels]);
