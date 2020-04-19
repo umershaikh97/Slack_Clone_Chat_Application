@@ -5,16 +5,20 @@ import firebase from './firebase';
 import App from './App';
 import Login from './components/auth/Login';
 import Register from './components/auth/Register';
-import { setUser } from './actions';
+import { setUser, clearUser } from './store/actions/userActions';
 import Spinner from './components/Spinner';
 
-const AppRoutes = ({ history, setUser, isLoading }) => {
+const AppRoutes = ({ history, setUser, clearUser, isLoading }) => {
 
     useEffect(() => {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
                 setUser(user)
                 history.push('/');
+            }
+            else {
+                clearUser();
+                history.push('/login');
             }
         })
     }, [])
@@ -40,6 +44,7 @@ const mapStateToProps = (state) => {
 const mapDispatchToProps = (dispatch) => {
     return {
         setUser: (...args) => { dispatch(setUser(...args)) },
+        clearUser: (...args) => { dispatch(clearUser(...args)) },
     }
 }
 
