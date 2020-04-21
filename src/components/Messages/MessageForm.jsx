@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import firebase from '../../firebase';
 import { Segment, Button, Input } from 'semantic-ui-react';
+import FileModal from './FileModal';
 
 const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
   const [message, setMessage] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
+  const [isOpenModal, toggleModal] = useState(false);
 
   const sendMessage = async () => {
     if (message) {
@@ -65,7 +67,9 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
           content="Upload Media"
           labelPosition="right"
           icon="cloud upload"
+          onClick={() => { toggleModal(true) }}
         />
+        <FileModal isOpenModal={isOpenModal} closeModal={() => { toggleModal(false) }} />
       </Button.Group>
     </Segment>
   );
