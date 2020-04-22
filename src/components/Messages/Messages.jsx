@@ -3,13 +3,15 @@ import firebase from '../../firebase';
 import { Segment, Comment } from "semantic-ui-react";
 import MessagesHeader from './MessagesHeader';
 import MessageForm from './MessageForm';
-import { checkArrayLength } from '../../utils';
+import { checkArrayLength, checkKeyInObject } from '../../utils';
 import Message from './Message';
 
 const Messages = ({ currentChannel, currentUser }) => {
     const [messagesRef, setMsgRef] = useState(firebase.database().ref('messages'))
     const [messages, setMessages] = useState([]);
     const [messagesLoading, setMessagesLoading] = useState(true);
+    const [showProgressBar, toggleProgressBar] = useState(false);
+    const [uniqueUsersCount, setUniqueUsersCount] = useState(0);
 
     useEffect(() => {
         if (currentChannel && currentUser) {
@@ -29,6 +31,7 @@ const Messages = ({ currentChannel, currentUser }) => {
             await messagesRef.child(channelId).on('child_added', snap => {
                 loadedMessages.push(snap.val());
                 setMessages([...loadedMessages])
+                countUniqueUsers(loadedMessages)
             })
         } catch (error) {
             console.log('error loading messages', error)
@@ -36,12 +39,28 @@ const Messages = ({ currentChannel, currentUser }) => {
         setMessagesLoading(false);
     }
 
+    const countUniqueUsers = (loadedMessages) => {
+        if (checkArrayLength(loadedMessages)) {
+            let usernames = loadedMessages.map(message => checkKeyInObject(message, 'user.name', 'value', ''))
+            let uniqueUserNames = [...new Set(usernames)];
+            setUniqueUsersCount(uniqueUserNames.length)
+        }
+    }
+
+    const isProgressBarVisible = (percentage) => {
+        if (percentage > 0) {
+            toggleProgressBar(true);
+        }
+    };
+
     return (
         <React.Fragment>
-            <MessagesHeader />
-
+            <MessagesHeader
+                channelName={checkKeyInObject(currentChannel, 'name') ? `#${currentChannel.name}` : ''}
+                uniqueUsersCount={uniqueUsersCount}
+            />
             <Segment>
-                <Comment.Group className="messages">{
+                <Comment.Group className={showProgressBar ? 'messages__process' : 'messages'}>{
                     checkArrayLength(messages) && messages.map(_message => {
                         return <Message
                             key={_message.timestamp}
@@ -56,6 +75,7 @@ const Messages = ({ currentChannel, currentUser }) => {
                 messagesRef={messagesRef}
                 currentUser={currentUser}
                 currentChannel={currentChannel}
+                isProgressBarVisible={isProgressBarVisible}
             />
         </React.Fragment>
     );

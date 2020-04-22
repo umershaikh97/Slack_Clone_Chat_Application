@@ -4,8 +4,9 @@ import { Segment, Button, Input } from 'semantic-ui-react';
 import FileModal from './FileModal';
 import { uuid } from 'uuidv4';
 import { checkKeyInObject } from '../../utils';
+import ProgressBar from './ProgressBar';
 
-const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
+const MessageForm = ({ messagesRef, currentChannel, currentUser, isProgressBarVisible }) => {
   const [message, setMessage] = useState('');
   const [isLoading, setLoading] = useState(false);
   const [errors, setErrors] = useState([]);
@@ -45,6 +46,7 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
       if (uploadTask) {
         uploadTask.on('state_changed', snap => {
           const percentageUploaded = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
+          isProgressBarVisible(percentageUploaded)
           setPercentageUploaded(percentageUploaded)
         })
         let pathToUpload = checkKeyInObject(currentChannel, 'id', 'value', null);
@@ -147,6 +149,10 @@ const MessageForm = ({ messagesRef, currentChannel, currentUser }) => {
           onClick={() => { toggleModal(true) }}
         />
         <FileModal isOpenModal={isOpenModal} uploadFile={uploadFile} closeModal={() => { toggleModal(false) }} />
+        <ProgressBar
+          uploadState={uploadState}
+          percentUploaded={percentageUploaded}
+        />
       </Button.Group>
     </Segment>
   );
