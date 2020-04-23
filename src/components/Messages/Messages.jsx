@@ -12,6 +12,8 @@ const Messages = ({ currentChannel, currentUser }) => {
     const [messagesLoading, setMessagesLoading] = useState(true);
     const [showProgressBar, toggleProgressBar] = useState(false);
     const [uniqueUsersCount, setUniqueUsersCount] = useState(0);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
 
     useEffect(() => {
         if (currentChannel && currentUser) {
@@ -20,6 +22,13 @@ const Messages = ({ currentChannel, currentUser }) => {
         return () => {
         }
     }, [])
+
+    useEffect(() => {
+        if (checkArrayLength(messages)) {
+            const filteredMessages = messages.filter(message => (message.content.toLowerCase().includes(searchTerm)))
+            setSearchResults([...filteredMessages])
+        }
+    }, [searchTerm])
 
     const addListener = (channelId) => {
         addMessageListener(channelId);
@@ -53,21 +62,28 @@ const Messages = ({ currentChannel, currentUser }) => {
         }
     };
 
+    const displayMessage = (_messages) => {
+        if (checkArrayLength(_messages)) {
+            _messages.map(_message => {
+                return <Message
+                    key={_message.timestamp}
+                    message={_message}
+                    user={currentUser}
+                />
+            })
+        }
+    }
+
     return (
         <React.Fragment>
             <MessagesHeader
                 channelName={checkKeyInObject(currentChannel, 'name') ? `#${currentChannel.name}` : ''}
                 uniqueUsersCount={uniqueUsersCount}
+                handleSearchChange={(e) => { setSearchTerm(e.target.value) }}
             />
             <Segment>
                 <Comment.Group className={showProgressBar ? 'messages__process' : 'messages'}>{
-                    checkArrayLength(messages) && messages.map(_message => {
-                        return <Message
-                            key={_message.timestamp}
-                            message={_message}
-                            user={currentUser}
-                        />
-                    })
+                    searchTerm ? displayMessage(searchResults) : displayMessage(messages)
                 }</Comment.Group>
             </Segment>
 
