@@ -64,7 +64,7 @@ const Messages = ({ currentChannel, currentUser }) => {
 
     const displayMessage = (_messages) => {
         if (checkArrayLength(_messages)) {
-            _messages.map(_message => {
+            return _messages.map(_message => {
                 return <Message
                     key={_message.timestamp}
                     message={_message}
